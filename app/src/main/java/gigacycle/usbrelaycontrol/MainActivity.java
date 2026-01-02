@@ -1,151 +1,243 @@
 package gigacycle.usbrelaycontrol;
 
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
+import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
-import android.support.v7.app.AppCompatActivity;
+import android.os.Build;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.Switch;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    UsbDevice[] UsbRelayModules = null;
-    static EditText et;
-    Spinner spRelayModules;
-    Switch swRelay1, swRelay2;
+    private static final String ACTION_USB_PERMISSION = "gigacycle.usbrelaycontrol.USB_PERMISSION";
+
+    private static final String PREFS = "relay_prefs";
+    private static final String K1 = "relay_name_1";
+    private static final String K2 = "relay_name_2";
+    private static final String K3 = "relay_name_3";
+    private static final String K4 = "relay_name_4";
+    private static final String KLOG = "app_log";
+
+    private UsbManager usbManager;
+    private Switch sw1, sw2, sw3, sw4;
+
+    private final List<UsbDevice> devices = new ArrayList<>();
+    private volatile boolean isUpdatingUi = false;
+
+    private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action) ||
+                    UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+                refreshList();
+                return;
+            }
+
+            if (ACTION_USB_PERMISSION.equals(action)) {
+                UsbDevice dev = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                boolean granted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false);
+                if (dev != null) {
+                    log("Permission " + (granted ? "OK" : "DENIED") + " dla: " + dev.getDeviceName());
+                }
+                refreshList();
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        swRelay1 = (Switch) findViewById(R.id.swRelay1);
-        swRelay2 = (Switch) findViewById(R.id.swRelay2);
-        spRelayModules = (Spinner) findViewById(R.id.spRelays);
-        Button btnRefresh = (Button) findViewById(R.id.btnRefresh);
-        et = (EditText) findViewById(R.id.etLog);
-        et.setFocusable(false);
 
-        refreshUsbPorts(spRelayModules);
+        usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
-        swRelay1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                turnOnOffRelay(UsbRelayModules[spRelayModules.getSelectedItemPosition()], 1, swRelay1.isChecked());
-            }
-        });
-        swRelay2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                turnOnOffRelay(UsbRelayModules[spRelayModules.getSelectedItemPosition()], 2, swRelay2.isChecked());
-            }
-        });
-        btnRefresh.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                et.setText("");
-                refreshUsbPorts(spRelayModules);
-            }
-        });
+        sw1 = findViewById(R.id.swRelay1);
+        sw2 = findViewById(R.id.swRelay2);
+        sw3 = findViewById(R.id.swRelay3);
+        sw4 = findViewById(R.id.swRelay4);
+
+        findViewById(R.id.btnSettings).setOnClickListener(v ->
+                startActivity(new Intent(this, SettingsActivity.class))
+        );
+
+        sw1.setOnCheckedChangeListener((b, on) -> { if (!isUpdatingUi) send(1, on); });
+        sw2.setOnCheckedChangeListener((b, on) -> { if (!isUpdatingUi) send(2, on); });
+        sw3.setOnCheckedChangeListener((b, on) -> { if (!isUpdatingUi) send(3, on); });
+        sw4.setOnCheckedChangeListener((b, on) -> { if (!isUpdatingUi) send(4, on); });
+
+        IntentFilter f = new IntentFilter();
+        f.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        f.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        f.addAction(ACTION_USB_PERMISSION);
+        registerReceiver(usbReceiver, f);
+
+        applyRelayNames();
+        refreshList();
     }
 
-    private static void log(String msg){
-        et.setText(et.getText() + "\n" + msg);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        applyRelayNames();
     }
 
-    private void refreshUsbPorts(Spinner spRelayModules){
-        if (UsbRelayModules != null)
-            UsbRelayModules = null;
-        et.setText("");
-        try {
-            UsbRelayModules = getUsbRelaysArray();
-            if ((UsbRelayModules != null))
-            {
-                List<String> relaysList = new ArrayList<>();
-                for (UsbDevice usbHidDev:UsbRelayModules) {
-                    relaysList.add(String.valueOf(usbHidDev.getDeviceId()));
+    private void applyRelayNames() {
+        SharedPreferences p = getSharedPreferences(PREFS, MODE_PRIVATE);
+        sw1.setText(p.getString(K1, "Przekaźnik 1"));
+        sw2.setText(p.getString(K2, "Przekaźnik 2"));
+        sw3.setText(p.getString(K3, "Przekaźnik 3"));
+        sw4.setText(p.getString(K4, "Przekaźnik 4"));
+    }
+
+    private UsbDevice getSelectedDevice() {
+        return devices.isEmpty() ? null : devices.get(0);
+    }
+
+    private void send(int relay, boolean on) {
+        UsbDevice d = getSelectedDevice();
+        if (d == null) {
+            log("Brak modulow USB");
+            return;
+        }
+
+        if (!usbManager.hasPermission(d)) {
+            log("Brak permission - zaakceptuj okno USB");
+            requestPerm(d);
+            return;
+        }
+
+        controlRelay(d, relay, on);
+    }
+
+    private void requestPerm(UsbDevice d) {
+        PendingIntent pi = PendingIntent.getBroadcast(
+                this,
+                0,
+                new Intent(ACTION_USB_PERMISSION),
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+                        ? PendingIntent.FLAG_IMMUTABLE
+                        : 0
+        );
+        usbManager.requestPermission(d, pi);
+    }
+
+    private void controlRelay(UsbDevice device, int relay, boolean on) {
+        UsbDeviceConnection conn = usbManager.openDevice(device);
+        if (conn == null) {
+            log("Nie mozna otworzyc urzadzenia");
+            return;
+        }
+
+        UsbInterface intf = device.getInterface(0);
+        if (!conn.claimInterface(intf, true)) {
+            conn.close();
+            log("Nie mozna przejac interfejsu");
+            return;
+        }
+
+        UsbEndpoint out = null;
+        for (int i = 0; i < intf.getEndpointCount(); i++) {
+            UsbEndpoint ep = intf.getEndpoint(i);
+            if (ep.getDirection() == UsbConstants.USB_DIR_OUT) {
+                out = ep;
+                break;
+            }
+        }
+
+        if (out == null) {
+            conn.releaseInterface(intf);
+            conn.close();
+            log("Brak endpoint OUT");
+            return;
+        }
+
+        byte[] cmd = new byte[64];
+        cmd[0] = (byte) 0xA0;
+        cmd[1] = (byte) relay;
+        cmd[2] = (byte) (on ? 0x01 : 0x00);
+        cmd[3] = (byte) (0xA0 + relay + (on ? 1 : 0));  // checksum
+
+        int r = conn.bulkTransfer(out, cmd, 64, 3000);
+
+        conn.releaseInterface(intf);
+        conn.close();
+
+        if (r == 64) {
+            log("Relay " + relay + " -> " + (on ? "ON" : "OFF"));
+
+            runOnUiThread(() -> {
+                isUpdatingUi = true;
+                try {
+                    if (relay == 1) sw1.setChecked(on);
+                    if (relay == 2) sw2.setChecked(on);
+                    if (relay == 3) sw3.setChecked(on);
+                    if (relay == 4) sw4.setChecked(on);
+                } finally {
+                    isUpdatingUi = false;
                 }
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, relaysList);
-                spRelayModules.setAdapter(adapter);
-                if (adapter.getCount() > 0) {
-                    spRelayModules.setSelection(0);
-                    swRelay1.setEnabled(true);
-                    swRelay2.setEnabled(true);
-                }
-            }
-        } catch (Exception e) {
-            log(e.getStackTrace().toString());
-        }
-
-        if (UsbRelayModules == null || UsbRelayModules.length == 0)
-        {
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, new String[]{"None"});
-            spRelayModules.setAdapter(adapter);
-            swRelay1.setEnabled(false);
-            swRelay2.setEnabled(false);
-        }
-    }
-
-    private void turnOnOffRelay(UsbDevice device, int relayNum, boolean onOff) {
-        try {
-            UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
-            UsbDeviceConnection connection = manager.openDevice(device);
-            if (connection == null || !connection.claimInterface(device.getInterface(0), true)) {
-                log("No connection to this device!");
-                return;
-            }
-            byte[] data = new byte[8];
-            Arrays.fill(data, (byte) 0);
-            data[0] = onOff ? (byte) (255) : (byte) (253);
-            data[1] = (byte) relayNum;
-            sendCommand(data, 0, data.length, 20, connection, device.getInterface(0).getEndpoint(0));
-        }
-        catch (Exception e){
-            log("Error >> " + e.getMessage());
-        }
-    }
-
-    public void sendCommand(byte[] data, int offset, int size, int timeout, UsbDeviceConnection connection, UsbEndpoint endPoint) {
-        if (offset != 0) {
-            data = Arrays.copyOfRange(data, offset, size);
-        }
-        if (endPoint == null) {
-            log("command not executed!");
+            });
         } else {
-            connection.controlTransfer(0x21, 0x09, 0x0300, 0x00, data, size, timeout);
+            log("Blad wysylania: " + r);
         }
     }
 
-    private UsbDevice[] getUsbRelaysArray() {
-        List<UsbDevice> relays = null;
-        UsbManager manager = (UsbManager) getApplicationContext().getSystemService(Context.USB_SERVICE);
-        if (manager == null)
-            return null;
-        HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
-        Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
+    private void refreshList() {
+        devices.clear();
 
-        while (deviceIterator.hasNext()) {
-            UsbDevice device = deviceIterator.next();
-            if (relays == null)
-                relays = new ArrayList<>();
-            if (device.getVendorId() == 0x16C0 && device.getProductId() == 0x05DF)
-                relays.add(device);
+        for (UsbDevice d : usbManager.getDeviceList().values()) {
+            if (d.getVendorId() == 0x5131 && d.getProductId() == 0x2007) {
+                devices.add(d);
+                if (!usbManager.hasPermission(d)) requestPerm(d);
+            }
         }
 
-        if (relays == null || relays.size() == 0)
-            return null;
-        else
-            return relays.toArray(new UsbDevice[relays.size()]);
+        boolean enabled = !devices.isEmpty();
+        sw1.setEnabled(enabled);
+        sw2.setEnabled(enabled);
+        sw3.setEnabled(enabled);
+        sw4.setEnabled(enabled);
+
+        log("Znaleziono " + devices.size() + " modulow USB");
+    }
+
+    private void log(String s) {
+        String ts = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
+        String line = "[" + ts + "] " + s;
+
+        SharedPreferences p = getSharedPreferences(PREFS, MODE_PRIVATE);
+        String old = p.getString(KLOG, "");
+        String merged = (old == null || old.isEmpty()) ? line : (old + "\n" + line);
+
+        int maxChars = 20000;
+        if (merged.length() > maxChars) {
+            merged = merged.substring(merged.length() - maxChars);
+        }
+
+        p.edit().putString(KLOG, merged).apply();
+    }
+
+    @Override
+    protected void onDestroy() {
+        try { unregisterReceiver(usbReceiver); } catch (Exception ignored) {}
+        super.onDestroy();
     }
 }
