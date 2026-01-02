@@ -1,0 +1,118 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#101418">
+
+    <ImageButton
+        android:id="@+id/btnSettings"
+        android:layout_width="42dp"
+        android:layout_height="42dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="12dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_menu_preferences"
+        android:tint="#EAF2FF"
+        android:contentDescription="Ustawienia" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="20dp"
+        android:paddingTop="80dp"
+        android:gravity="center">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <Switch
+                android:id="@+id/swRelay1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Przekaźnik 1"
+                android:textSize="34sp"
+                android:textStyle="bold"
+                android:textColor="@color/relay_btn_text"
+                android:gravity="center"
+                android:padding="22dp"
+                android:background="@drawable/relay_btn_bg"
+                android:showText="false"
+                android:switchMinWidth="0dp"
+                android:switchPadding="0dp"
+                android:track="@drawable/transparent_1dp"
+                android:thumb="@drawable/transparent_1dp"
+                android:layout_marginEnd="16dp"/>
+
+            <Switch
+                android:id="@+id/swRelay2"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Przekaźnik 2"
+                android:textSize="34sp"
+                android:textStyle="bold"
+                android:textColor="@color/relay_btn_text"
+                android:gravity="center"
+                android:padding="22dp"
+                android:background="@drawable/relay_btn_bg"
+                android:showText="false"
+                android:switchMinWidth="0dp"
+                android:switchPadding="0dp"
+                android:track="@drawable/transparent_1dp"
+                android:thumb="@drawable/transparent_1dp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <Switch
+                android:id="@+id/swRelay3"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Przekaźnik 3"
+                android:textSize="34sp"
+                android:textStyle="bold"
+                android:textColor="@color/relay_btn_text"
+                android:gravity="center"
+                android:padding="22dp"
+                android:background="@drawable/relay_btn_bg"
+                android:showText="false"
+                android:switchMinWidth="0dp"
+                android:switchPadding="0dp"
+                android:track="@drawable/transparent_1dp"
+                android:thumb="@drawable/transparent_1dp"
+                android:layout_marginEnd="16dp"/>
+
+            <Switch
+                android:id="@+id/swRelay4"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Przekaźnik 4"
+                android:textSize="34sp"
+                android:textStyle="bold"
+                android:textColor="@color/relay_btn_text"
+                android:gravity="center"
+                android:padding="22dp"
+                android:background="@drawable/relay_btn_bg"
+                android:showText="false"
+                android:switchMinWidth="0dp"
+                android:switchPadding="0dp"
+                android:track="@drawable/transparent_1dp"
+                android:thumb="@drawable/transparent_1dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>
