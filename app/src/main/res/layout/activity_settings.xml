@@ -1,0 +1,143 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#101418">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ustawienia"
+            android:textColor="#EAF2FF"
+            android:textStyle="bold"
+            android:textSize="24sp"
+            android:layout_marginBottom="14dp"/>
+
+        <!-- NAZWY -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nazwy przekaźników"
+            android:textColor="#EAF2FF"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginBottom="10dp"/>
+
+        <EditText
+            android:id="@+id/etName1"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:hint="Nazwa przekaźnika 1"
+            android:padding="12dp"
+            android:textSize="18sp"
+            android:background="#1A222B"
+            android:textColor="#EAF2FF"
+            android:textColorHint="#5F738A"
+            android:layout_marginBottom="10dp"/>
+
+        <EditText
+            android:id="@+id/etName2"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:hint="Nazwa przekaźnika 2"
+            android:padding="12dp"
+            android:textSize="18sp"
+            android:background="#1A222B"
+            android:textColor="#EAF2FF"
+            android:textColorHint="#5F738A"
+            android:layout_marginBottom="10dp"/>
+
+        <EditText
+            android:id="@+id/etName3"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:hint="Nazwa przekaźnika 3"
+            android:padding="12dp"
+            android:textSize="18sp"
+            android:background="#1A222B"
+            android:textColor="#EAF2FF"
+            android:textColorHint="#5F738A"
+            android:layout_marginBottom="10dp"/>
+
+        <EditText
+            android:id="@+id/etName4"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:hint="Nazwa przekaźnika 4"
+            android:padding="12dp"
+            android:textSize="18sp"
+            android:background="#1A222B"
+            android:textColor="#EAF2FF"
+            android:textColorHint="#5F738A"
+            android:layout_marginBottom="14dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="18dp">
+
+            <Button
+                android:id="@+id/btnDefaults"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Domyślne"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#0B0F14"
+                android:background="#FFD166"
+                android:layout_marginEnd="12dp"/>
+
+            <Button
+                android:id="@+id/btnSave"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Zapisz"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#0B0F14"
+                android:background="#00E5FF"/>
+        </LinearLayout>
+
+        <!-- LOGI -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Logi"
+            android:textColor="#EAF2FF"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginBottom="10dp"/>
+
+        <Button
+            android:id="@+id/btnClearLog"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Wyczyść log"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#0B0F14"
+            android:background="#FF6B6B"
+            android:layout_marginBottom="10dp"/>
+
+        <EditText
+            android:id="@+id/etLogSettings"
+            android:layout_width="match_parent"
+            android:layout_height="260dp"
+            android:background="#0D1116"
+            android:textColor="#CFE3FF"
+            android:textSize="13sp"
+            android:gravity="top"
+            android:padding="12dp"
+            android:focusable="false"
+            android:scrollbars="vertical" />
+
+    </LinearLayout>
+</ScrollView>
