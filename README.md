@@ -9,3 +9,4 @@ Using this example you should able to turn on/off HID USB relays
 4. Turn on/off relays
 
 If you want to use another type of HID USB Relays, then you should change the vendorID and productId in the code.
+Builded for vID 5131, pID 2007
